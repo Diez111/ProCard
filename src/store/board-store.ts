@@ -16,6 +16,7 @@ export type Task = {
   description: string;
   labels: string[];
   createdAt: number;
+  date?: string;
 };
 
 interface BoardState {
@@ -24,6 +25,8 @@ interface BoardState {
   darkMode: boolean;
   searchQuery: string;
   tagSearch: string;
+  googleCalendarUrl: string;
+  weatherLocation: string;
   addColumn: (title: string) => void;
   updateColumn: (id: Id, title: string) => void;
   deleteColumn: (id: Id) => void;
@@ -31,9 +34,13 @@ interface BoardState {
   updateTask: (id: Id, updates: Partial<Omit<Task, 'id' | 'columnId'>>) => void;
   deleteTask: (id: Id) => void;
   moveTask: (taskId: Id, toColumnId: Id) => void;
+  reorderTasks: (activeId: Id, overId: Id) => void;
   toggleDarkMode: () => void;
   setSearchQuery: (query: string) => void;
   setTagSearch: (tags: string) => void;
+  setGoogleCalendarUrl: (url: string) => void;
+  removeGoogleCalendarUrl: () => void;
+  setWeatherLocation: (location: string) => void;
   getFilteredTasks: () => Task[];
 }
 
@@ -49,6 +56,8 @@ export const useBoardStore = create<BoardState>()(
       darkMode: true,
       searchQuery: '',
       tagSearch: '',
+      googleCalendarUrl: '',
+      weatherLocation: '',
 
       addColumn: (title) =>
         set((state) => ({
@@ -77,6 +86,7 @@ export const useBoardStore = create<BoardState>()(
               id: generateId(),
               columnId,
               createdAt: Date.now(),
+              date: task.date ? task.date : undefined,
             },
           ],
         })),
@@ -100,6 +110,25 @@ export const useBoardStore = create<BoardState>()(
           ),
         })),
 
+      reorderTasks: (activeId, overId) =>
+        set((state) => {
+          const tasks = [...state.tasks];
+          const activeTask = tasks.find((t) => t.id === activeId);
+          const overTask = tasks.find((t) => t.id === overId);
+
+          if (!activeTask || !overTask || activeTask.columnId !== overTask.columnId) {
+            return state;
+          }
+
+          const activeIndex = tasks.indexOf(activeTask);
+          const overIndex = tasks.indexOf(overTask);
+
+          tasks.splice(activeIndex, 1);
+          tasks.splice(overIndex, 0, activeTask);
+
+          return { tasks };
+        }),
+
       toggleDarkMode: () =>
         set((state) => ({
           darkMode: !state.darkMode,
@@ -115,22 +144,36 @@ export const useBoardStore = create<BoardState>()(
           tagSearch: tags,
         })),
 
+      setGoogleCalendarUrl: (url: string) =>
+        set(() => ({
+          googleCalendarUrl: url,
+        })),
+
+      removeGoogleCalendarUrl: () =>
+        set(() => ({
+          googleCalendarUrl: "",
+        })),
+
+      setWeatherLocation: (location: string) =>
+        set(() => ({
+          weatherLocation: location,
+        })),
+
       getFilteredTasks: () => {
         const state = get();
         const searchLower = state.searchQuery.toLowerCase();
         const searchTags = state.tagSearch
           .toLowerCase()
           .split(',')
-          .map(tag => tag.trim())
+          .map((tag) => tag.trim())
           .filter(Boolean);
 
         return state.tasks
-          .filter(task => {
+          .filter((task) => {
             const matchesSearch = task.title.toLowerCase().includes(searchLower);
-            const matchesTags = searchTags.length === 0 || 
-              task.labels.some(label => 
-                searchTags.includes(label.toLowerCase())
-              );
+            const matchesTags =
+              searchTags.length === 0 ||
+              task.labels.some((label) => searchTags.includes(label.toLowerCase()));
             return matchesSearch && matchesTags;
           })
           .sort((a, b) => b.createdAt - a.createdAt);
@@ -141,3 +184,5 @@ export const useBoardStore = create<BoardState>()(
     }
   )
 );
+
+export const reorderTasks = useBoardStore.getState().reorderTasks;

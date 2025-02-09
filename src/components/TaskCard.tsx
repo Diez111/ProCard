@@ -1,29 +1,39 @@
 import React from 'react';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { Task } from '../store/board-store';
 import { useBoardStore } from '../store/board-store';
 import { Button } from './ui/button';
-import { Pencil, Trash2 } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { MoreHorizontal, Trash, Tag, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from './ui/dialog';
-import { Label } from './ui/label';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from './ui/dialog';
 import { Input } from './ui/input';
+import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
+import { cn } from '../lib/utils';
 
-interface Props {
+interface TaskCardProps {
   task: Task;
-  onUpdate: (id: string, updates: Partial<Task>) => void;
+  sourceColumnId: string;
+  onUpdate: (id: string, task: Partial<Task>) => void;
   onDelete: (id: string) => void;
+  onMoveTask: (taskId: string, sourceColumnId: string, direction: 'left' | 'right') => void;
+  canMoveLeft: boolean;
+  canMoveRight: boolean;
 }
 
-export function TaskCard({ task, onUpdate, onDelete }: Props) {
+export function TaskCard({ 
+  task, 
+  sourceColumnId, 
+  onUpdate, 
+  onDelete,
+  onMoveTask,
+  canMoveLeft,
+  canMoveRight 
+}: TaskCardProps) {
   const { tagSearch } = useBoardStore();
   const searchTags = tagSearch
     .toLowerCase()
@@ -33,170 +43,155 @@ export function TaskCard({ task, onUpdate, onDelete }: Props) {
 
   const getTagClassName = (label: string) => {
     const isHighlighted = searchTags.includes(label.toLowerCase());
-    return cn(
-      "px-2 py-0.5 text-xs rounded-full",
+    return `px-2 py-0.5 text-xs rounded-full ${
       isHighlighted
         ? "bg-blue-500 text-white dark:bg-blue-600"
         : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100"
-    );
+    }`;
   };
 
-  const [isEditOpen, setIsEditOpen] = React.useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
-  const [editedTask, setEditedTask] = React.useState(task);
-
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: task.id,
-    data: {
-      type: "Task",
-      task,
-    },
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [editedTitle, setEditedTitle] = React.useState(task.title);
+  const [editedDescription, setEditedDescription] = React.useState(task.description);
+  const [editedDate, setEditedDate] = React.useState(task.date || '');
+  const [editedLabels, setEditedLabels] = React.useState(task.labels.join(', '));
 
   const handleSave = () => {
-    if (!editedTask.title.trim() || !editedTask.description.trim()) {
-      return;
-    }
-    onUpdate(task.id, editedTask);
-    setIsEditOpen(false);
+    onUpdate(task.id, {
+      title: editedTitle,
+      description: editedDescription,
+      date: editedDate,
+      labels: editedLabels.split(',').map(label => label.trim()).filter(Boolean),
+    });
+    setIsEditing(false);
   };
 
-  const handleDelete = () => {
-    onDelete(task.id);
-    setIsDeleteOpen(false);
-  };
+
 
   return (
     <>
       <div
-        ref={setNodeRef}
-        style={style}
-        {...attributes}
-        {...listeners}
-        className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
+        className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm border border-transparent hover:border-gray-300 dark:hover:border-gray-600 max-w-[95vw]"
+        onClick={() => setIsEditing(true)}
       >
         <div className="flex justify-between items-start gap-2">
-          <h3 className="text-sm font-medium">{task.title}</h3>
-          <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setIsEditOpen(true)}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-red-500 hover:text-red-600"
-              onClick={() => setIsDeleteOpen(true)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+          <h3 className="font-medium text-gray-700 dark:text-gray-200">
+            {task.title}
+          </h3>
+          <div className="flex items-center gap-1">
+            {canMoveLeft && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMoveTask(task.id, sourceColumnId, 'left');
+                }}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            )}
+            {canMoveRight && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMoveTask(task.id, sourceColumnId, 'right');
+                }}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(task.id);
+                }}>
+                  <Trash className="h-4 w-4 mr-2" />
+                  Eliminar Tarea
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
+
         {task.description && (
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 line-clamp-3">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
             {task.description}
           </p>
         )}
-        {task.labels && task.labels.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {task.labels.map((label, index) => (
-              <span
-                key={index}
-                className={getTagClassName(label)}
-              >
-                {label}
-              </span>
-            ))}
-          </div>
-        )}
+
+        <div className="flex flex-wrap gap-2 mt-3">
+          {task.date && (
+            <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+              <Calendar className="h-3 w-3 mr-1" />
+              {task.date}
+            </div>
+          )}
+          {task.labels.map((label, index) => (
+            <div
+              key={index}
+              className={`flex items-center text-xs ${getTagClassName(label)} px-2 py-1 rounded`}
+            >
+              <Tag className="h-3 w-3 mr-1" />
+              {label}
+            </div>
+          ))}
+        </div>
       </div>
 
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+      <Dialog open={isEditing} onOpenChange={setIsEditing}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Tarea</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
               <Label htmlFor="title">Título</Label>
               <Input
                 id="title"
-                value={editedTask.title}
-                onChange={(e) =>
-                  setEditedTask({ ...editedTask, title: e.target.value })
-                }
-                required
+                value={editedTitle}
+                onChange={(e) => setEditedTitle(e.target.value)}
               />
             </div>
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="description">Descripción</Label>
               <Textarea
                 id="description"
-                value={editedTask.description}
-                onChange={(e) =>
-                  setEditedTask({ ...editedTask, description: e.target.value })
-                }
-                required
+                value={editedDescription}
+                onChange={(e) => setEditedDescription(e.target.value)}
               />
             </div>
-            <div>
-              <Label htmlFor="labels">Etiquetas (separadas por comas)</Label>
+            <div className="space-y-2">
+              <Label htmlFor="date">Fecha</Label>
+              <Input
+                id="date"
+                type="date"
+                value={editedDate}
+                onChange={(e) => setEditedDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="labels">Etiquetas (separadas por coma)</Label>
               <Input
                 id="labels"
-                value={editedTask.labels.join(', ')}
-                onChange={(e) =>
-                  setEditedTask({
-                    ...editedTask,
-                    labels: e.target.value.split(',').map((l) => l.trim()).filter(Boolean),
-                  })
-                }
+                value={editedLabels}
+                onChange={(e) => setEditedLabels(e.target.value)}
+                placeholder="diseño, frontend, bug"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleSave}
-              disabled={!editedTask.title.trim() || !editedTask.description.trim()}
-            >
-              Guardar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Eliminar Tarea</DialogTitle>
-          </DialogHeader>
-          <p>¿Estás seguro de que quieres eliminar esta tarea?</p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>
-              Cancelar
-            </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              Eliminar
-            </Button>
+            <Button onClick={handleSave}>Guardar Cambios</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
