@@ -77,7 +77,7 @@ Las contribuciones son bienvenidas. Si encuentras algún problema o tienes una s
 
 ## Contacto
 
-Para cualquier pregunta o comentario, puedes contactarme a través de [mi correo electrónico](mailto:tu-correo@example.com).
+Para cualquier pregunta o comentario, puedes contactarme a través de [mi correo electrónico](lautaroagustindiez@gmail.com).
 
 ---
 
