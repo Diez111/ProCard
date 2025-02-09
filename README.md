@@ -78,7 +78,3 @@ Las contribuciones son bienvenidas. Si encuentras algún problema o tienes una s
 ## Contacto
 
 Para cualquier pregunta o comentario, puedes contactarme a través de [mi correo electrónico](lautaroagustindiez@gmail.com).
-
----
-
-¡Espero que ProductividadApp te ayude a mejorar tu productividad y organización!
