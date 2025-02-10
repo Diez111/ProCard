@@ -2,7 +2,8 @@ import React from 'react';
 import { Task } from '../store/board-store';
 import { TaskCard } from './TaskCard';
 import { Button } from '../components/ui/button';
-import { MoreHorizontal, Trash } from 'lucide-react';
+import { MoreHorizontal, Trash, Plus } from 'lucide-react';
+import { AddTaskDialog } from './AddTaskDialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +41,7 @@ export function Column({
 }: ColumnProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [title, setTitle] = React.useState(column.title);
+  const [isAddingTask, setIsAddingTask] = React.useState(false);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
@@ -110,16 +112,17 @@ export function Column({
         <Button
           variant="ghost"
           className="w-full justify-start text-gray-500 dark:text-gray-400"
-          onClick={() =>
-            onAddTask(column.id, {
-              title: "Nueva tarea",
-              description: "",
-              labels: [],
-            })
-          }
+          onClick={() => setIsAddingTask(true)}
         >
-          + Agregar tarea
+          <Plus className="h-4 w-4 mr-2" />
+          Agregar tarea
         </Button>
+
+        <AddTaskDialog
+          open={isAddingTask}
+          onClose={() => setIsAddingTask(false)}
+          onAddTask={(task) => onAddTask(column.id, task)}
+        />
       </div>
     </div>
   );

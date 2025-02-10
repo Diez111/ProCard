@@ -1,17 +1,23 @@
+// App.tsx
 import React from 'react';
 import { useBoardStore } from './store/board-store';
 import { Column } from './components/Column';
 import { Button } from './components/ui/button';
 import { Input } from './components/ui/input';
 import { Label } from './components/ui/label';
-import { CaretDownIcon, CaretUpIcon, CaretRightIcon } from '@radix-ui/react-icons';
+import { ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './components/ui/dialog';
 import { Plus, Moon, Sun, Menu, X } from 'lucide-react';
 import { Weather } from './components/Weather';
+import DashboardBar from './components/DashboardBar';
 
 export default function App() {
+  const selectedDashboard = useBoardStore((state) => state.selectedDashboard);
+  const columns = useBoardStore((state) => 
+    state.boards[selectedDashboard]?.columns || []
+  );
+
   const {
-    columns,
     darkMode,
     searchQuery,
     googleCalendarUrl,
@@ -40,7 +46,6 @@ export default function App() {
   const [isLoadingWeather, setIsLoadingWeather] = React.useState(false);
   const [weatherLocation, setWeatherLocation] = React.useState<string>("");
 
-  // Cargar ubicación guardada al iniciar
   React.useEffect(() => {
     const savedLocation = localStorage.getItem('weatherLocation');
     if (savedLocation) {
@@ -54,7 +59,6 @@ export default function App() {
   const [isGoogleCalendarSectionOpen, setIsGoogleCalendarSectionOpen] = React.useState(true);
   const [isMobileSideOpen, setIsMobileSideOpen] = React.useState(false);
   const columnsContainerRef = React.useRef<HTMLDivElement>(null);
-
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const getDayName = (dateStr: string): string => {
@@ -76,7 +80,6 @@ export default function App() {
         desc: data.current_condition[0].weatherDesc[0].value,
         forecast: data.weather,
       });
-      // Guardar ubicación en localStorage y ocultar barra de búsqueda
       localStorage.setItem('weatherLocation', location);
     } catch (error) {
       console.error('Error fetching weather:', error);
@@ -88,7 +91,14 @@ export default function App() {
 
   const handleExport = () => {
     const state = useBoardStore.getState();
-    const data = { columns: state.columns, tasks: state.tasks, googleCalendarUrl: state.googleCalendarUrl };
+    const data = {
+      boards: state.boards,
+      dashboardNames: state.dashboardNames,
+      selectedDashboard: state.selectedDashboard,
+      darkMode: state.darkMode,
+      searchQuery: state.searchQuery,
+      tagSearch: state.tagSearch,
+    };
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
     const a = document.createElement('a');
     a.setAttribute('href', dataStr);
@@ -97,22 +107,25 @@ export default function App() {
   };
 
   const handleImport = () => {
-    fileInputRef.current && fileInputRef.current.click();
+    fileInputRef.current?.click();
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files ? e.target.files[0] : null;
+    const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
         const importedData = JSON.parse(event.target?.result as string);
-        if (importedData.columns && importedData.tasks) {
-          useBoardStore.setState({ 
-            columns: importedData.columns, 
-            tasks: importedData.tasks,
-            googleCalendarUrl: importedData.googleCalendarUrl || ""
-          });
+        if (
+          importedData.boards &&
+          importedData.dashboardNames &&
+          importedData.selectedDashboard !== undefined &&
+          importedData.darkMode !== undefined &&
+          importedData.searchQuery !== undefined &&
+          importedData.tagSearch !== undefined
+        ) {
+          useBoardStore.setState(importedData);
         } else {
           alert('Formato incorrecto de importación');
         }
@@ -171,11 +184,7 @@ export default function App() {
               <Button onClick={handleImport} className="px-3 py-1">Importar</Button>
               <Button onClick={handleExport} className="px-3 py-1">Exportar</Button>
               <Button variant="ghost" size="icon" onClick={toggleDarkMode}>
-                {darkMode ? (
-                  <Sun className="h-5 w-5" />
-                ) : (
-                  <Moon className="h-5 w-5" />
-                )}
+                {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </Button>
             </div>
           </div>
@@ -185,51 +194,49 @@ export default function App() {
 
       <main className="h-[calc(100vh-4rem)] overflow-hidden">
         <div className="flex flex-col md:flex-row h-full overflow-hidden">
-          <div className="flex-1 p-4 overflow-hidden">
-              <div 
-                ref={columnsContainerRef}
-                className="h-full overflow-hidden"
-              >
-                <div className="flex gap-4 h-full overflow-x-auto overflow-y-hidden">
-                  {columns.map((column, index) => (
-                    <div key={column.id} className="flex-shrink-0 w-[85vw] md:w-72">
-                      <Column
-                        column={column}
-                        tasks={getFilteredTasks().filter((task) => task.columnId === column.id)}
-                        onAddTask={addTask}
-                        onUpdateTask={updateTask}
-                        onDeleteTask={deleteTask}
-                        onUpdateColumn={updateColumn}
-                        onDeleteColumn={deleteColumn}
-                        onMoveTask={handleMoveTask}
-                        isFirstColumn={index === 0}
-                        isLastColumn={index === columns.length - 1}
-                      />
-                    </div>
-                  ))}
-                  <div className="flex-shrink-0 w-[85vw] md:w-72">
-                    <Button
-                      variant="outline"
-                      className="h-full min-h-[8rem] w-full"
-                      onClick={() => setIsNewColumnOpen(true)}
-                    >
-                      <Plus className="h-5 w-5 mr-2" />
-                      Añadir Columna
-                    </Button>
+          <div className="flex-1 p-4 overflow-hidden flex flex-col">
+            <div ref={columnsContainerRef} className="flex-1 overflow-x-auto overflow-y-hidden">
+              <div className="flex gap-4 h-full min-w-fit pb-4">
+                {columns.map((column, index) => (
+                  <div key={column.id} className="flex-shrink-0 w-[85vw] md:w-72">
+                    <Column
+                      column={column}
+                      tasks={getFilteredTasks().filter((task) => task.columnId === column.id)}
+                      onAddTask={addTask}
+                      onUpdateTask={updateTask}
+                      onDeleteTask={deleteTask}
+                      onUpdateColumn={updateColumn}
+                      onDeleteColumn={deleteColumn}
+                      onMoveTask={handleMoveTask}
+                      isFirstColumn={index === 0}
+                      isLastColumn={index === columns.length - 1}
+                    />
                   </div>
+                ))}
+                <div className="flex-shrink-0 w-[85vw] md:w-72">
+                  <Button
+                    variant="outline"
+                    className="h-full min-h-[8rem] w-full"
+                    onClick={() => setIsNewColumnOpen(true)}
+                  >
+                    <Plus className="h-5 w-5 mr-2" />
+                    Añadir Columna
+                  </Button>
                 </div>
               </div>
+            </div>
+            <div className="mt-4">
+              <DashboardBar />
+            </div>
           </div>
+
+          {/* Sidebar */}
           <div className="hidden md:block w-full md:w-1/3 md:ml-4 mt-4 md:mt-0 h-screen">
             <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg h-full flex flex-col space-y-6 overflow-y-auto">
               <div>
                 <h3 className="text-lg font-semibold mb-2">Clima</h3>
                 <Button variant="ghost" size="icon" onClick={() => setIsWeatherSectionOpen(!isWeatherSectionOpen)}>
-                  {isWeatherSectionOpen ? (
-                    <CaretDownIcon className="h-5 w-5" />
-                  ) : (
-                    <CaretRightIcon className="h-5 w-5" />
-                  )}
+                  {isWeatherSectionOpen ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
                 </Button>
                 {isWeatherSectionOpen && (
                   <Weather
@@ -246,14 +253,11 @@ export default function App() {
                   />
                 )}
               </div>
+
               <div className="flex-1 flex flex-col min-h-0">
                 <h3 className="text-lg font-semibold mb-2">Google Calendar</h3>
                 <Button variant="ghost" size="icon" onClick={() => setIsGoogleCalendarSectionOpen(!isGoogleCalendarSectionOpen)}>
-                  {isGoogleCalendarSectionOpen ? (
-                    <CaretDownIcon className="h-5 w-5" />
-                  ) : (
-                    <CaretUpIcon className="h-5 w-5" />
-                  )}
+                  {isGoogleCalendarSectionOpen ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
                 </Button>
                 {isGoogleCalendarSectionOpen && (
                   <div className="flex flex-col gap-2">
@@ -278,17 +282,13 @@ export default function App() {
                       <div className="flex flex-col gap-2">
                         <Input
                           type="text"
-                          placeholder="Ingresa la URL de tu Google Calendar"
+                          placeholder="URL de Google Calendar"
                           value={newCalendarUrl}
                           onChange={(e) => setNewCalendarUrl(e.target.value)}
                         />
-                        <Button onClick={() => {
-                          if (newCalendarUrl.trim() === "") {
-                            alert("Ingrese una URL válida");
-                          } else {
-                            setGoogleCalendarUrl(newCalendarUrl);
-                          }
-                        }}>
+                        <Button 
+                          onClick={() => newCalendarUrl.trim() ? setGoogleCalendarUrl(newCalendarUrl) : alert("URL inválida")}
+                        >
                           Añadir Calendar
                         </Button>
                       </div>
@@ -300,114 +300,92 @@ export default function App() {
           </div>
         </div>
       </main>
+
+      {/* Mobile Sidebar */}
       {isMobileSideOpen && (
-        <div className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
-          <div className="absolute right-0 top-0 h-full w-full max-w-md bg-gray-200 dark:bg-gray-950 p-4 overflow-y-auto">
+        <div className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-50">
+          <div className="absolute right-0 top-0 h-full w-full max-w-md bg-gray-200 dark:bg-gray-950 p-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold">Clima y Calendario</h2>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setIsMobileSideOpen(false)}
-              >
+              <Button variant="ghost" size="icon" onClick={() => setIsMobileSideOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg">
+            <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg space-y-6">
               <div>
                 <h3 className="text-lg font-semibold mb-2">Clima</h3>
-                <Button variant="ghost" size="icon" onClick={() => setIsWeatherSectionOpen(!isWeatherSectionOpen)}>
-                  {isWeatherSectionOpen ? (
-                    <CaretDownIcon className="h-5 w-5" />
-                  ) : (
-                    <CaretRightIcon className="h-5 w-5" />
-                  )}
-                </Button>
-                {isWeatherSectionOpen && (
-                  <Weather
-                    weatherLocation={weatherLocation}
-                    setWeatherLocation={setWeatherLocation}
-                    weatherData={weatherData}
-                    isLoadingWeather={isLoadingWeather}
-                    fetchWeather={fetchWeather}
-                    handleClearWeather={() => {
-                      setWeatherData(null);
-                      setWeatherLocation('');
-                    }}
-                    getDayName={getDayName}
-                  />
-                )}
+                <Weather
+                  weatherLocation={weatherLocation}
+                  setWeatherLocation={setWeatherLocation}
+                  weatherData={weatherData}
+                  isLoadingWeather={isLoadingWeather}
+                  fetchWeather={fetchWeather}
+                  handleClearWeather={() => {
+                    setWeatherData(null);
+                    setWeatherLocation('');
+                  }}
+                  getDayName={getDayName}
+                />
               </div>
-              <div className="mt-6">
+              <div>
                 <h3 className="text-lg font-semibold mb-2">Google Calendar</h3>
-                <Button variant="ghost" size="icon" onClick={() => setIsGoogleCalendarSectionOpen(!isGoogleCalendarSectionOpen)}>
-                  {isGoogleCalendarSectionOpen ? (
-                    <CaretDownIcon className="h-5 w-5" />
-                  ) : (
-                    <CaretUpIcon className="h-5 w-5" />
-                  )}
-                </Button>
-                {isGoogleCalendarSectionOpen && (
-                  <div className="flex flex-col gap-2">
-                    {googleCalendarUrl ? (
-                      <>
-                        <div className="h-[500px]">
-                          <iframe
-                            src={googleCalendarUrl}
-                            className="w-full h-full border-0"
-                            frameBorder="0"
-                            scrolling="no"
-                          ></iframe>
-                        </div>
-                        <Button 
-                          onClick={() => { removeGoogleCalendarUrl(); setNewCalendarUrl(""); }} 
-                          className="mt-2 px-3 py-1"
-                        >
-                          Eliminar Calendar
-                        </Button>
-                      </>
-                    ) : (
-                      <div className="flex flex-col gap-2">
-                        <Input
-                          type="text"
-                          placeholder="Ingresa la URL de tu Google Calendar"
-                          value={newCalendarUrl}
-                          onChange={(e) => setNewCalendarUrl(e.target.value)}
-                        />
-                        <Button onClick={() => {
-                          if (newCalendarUrl.trim() === "") {
-                            alert("Ingrese una URL válida");
-                          } else {
-                            setGoogleCalendarUrl(newCalendarUrl);
-                          }
-                        }}>
-                          Añadir Calendar
-                        </Button>
-                      </div>
-                    )}
+                {googleCalendarUrl ? (
+                  <div className="h-[300px]">
+                    <iframe
+                      src={googleCalendarUrl}
+                      className="w-full h-full border-0"
+                      frameBorder="0"
+                      scrolling="no"
+                    ></iframe>
                   </div>
+                ) : (
+                  <Input
+                    type="text"
+                    placeholder="URL de Google Calendar"
+                    value={newCalendarUrl}
+                    onChange={(e) => setNewCalendarUrl(e.target.value)}
+                  />
                 )}
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* New Column Dialog */}
       <Dialog open={isNewColumnOpen} onOpenChange={setIsNewColumnOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nueva Columna</DialogTitle>
+            <DialogTitle>Crear Nueva Columna</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <Label htmlFor="title">Título</Label>
-            <Input
-              id="title"
-              value={newColumnTitle}
-              onChange={(e) => setNewColumnTitle(e.target.value)}
-              placeholder="Ingrese el título de la columna"
-            />
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="columnName">Nombre de la columna</Label>
+              <Input
+                id="columnName"
+                value={newColumnTitle}
+                onChange={(e) => setNewColumnTitle(e.target.value)}
+                placeholder="Ej: En progreso"
+                onKeyDown={(e) => e.key === 'Enter' && handleAddColumn()}
+              />
+            </div>
           </div>
           <DialogFooter>
-            <Button onClick={handleAddColumn}>Agregar Columna</Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsNewColumnOpen(false);
+                setNewColumnTitle('');
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleAddColumn}
+              disabled={!newColumnTitle.trim()}
+            >
+              Crear Columna
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
