@@ -158,6 +158,40 @@ export default function App() {
     }
   };
 
+  const handleGoogleCalendarUrl = (url: string) => {
+    if (!url.trim()) {
+      alert("Por favor ingrese una URL válida");
+      return;
+    }
+
+    try {
+      // Validar y formatear la URL del calendario
+      let formattedUrl = url;
+      
+      // Si es una URL de calendario público
+      if (url.includes('calendar.google.com/calendar/u/0/embed')) {
+        formattedUrl = url;
+      } 
+      // Si es una URL de calendario compartido (formato antiguo)
+      else if (url.includes('calendar.google.com/calendar/embed')) {
+        formattedUrl = url;
+      }
+      // Si es una URL de ID de calendario
+      else if (url.match(/[\w-]+@group\.calendar\.google\.com/)) {
+        formattedUrl = `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(url)}`;
+      }
+      // Si es una URL no válida
+      else {
+        throw new Error('Formato de URL no válido');
+      }
+
+      setGoogleCalendarUrl(formattedUrl);
+      setNewCalendarUrl('');
+    } catch (error) {
+      alert("Por favor ingrese una URL válida de Google Calendar. Puede obtenerla desde la configuración de su calendario en 'Integrar calendario' > 'Insertar calendario'");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-200 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
       <header className="sticky top-0 z-10 bg-gray-200 dark:bg-gray-900 border-b dark:border-gray-800 shadow-sm">
@@ -263,31 +297,43 @@ export default function App() {
                   <div className="flex flex-col gap-2">
                     {googleCalendarUrl ? (
                       <>
-                        <div className="h-[500px]">
+                        <div className="h-[500px] relative">
                           <iframe
                             src={googleCalendarUrl}
-                            className="w-full h-full border-0"
+                            className="w-full h-full border-0 rounded-lg"
                             frameBorder="0"
                             scrolling="no"
+                            title="Google Calendar"
+                            sandbox="allow-scripts allow-same-origin allow-popups"
                           ></iframe>
                         </div>
                         <Button 
-                          onClick={() => { removeGoogleCalendarUrl(); setNewCalendarUrl(""); }} 
+                          onClick={() => { removeGoogleCalendarUrl(); setNewCalendarUrl(''); }} 
                           className="mt-2 px-3 py-1"
+                          variant="destructive"
                         >
                           Eliminar Calendar
                         </Button>
                       </>
                     ) : (
                       <div className="flex flex-col gap-2">
-                        <Input
-                          type="text"
-                          placeholder="URL de Google Calendar"
-                          value={newCalendarUrl}
-                          onChange={(e) => setNewCalendarUrl(e.target.value)}
-                        />
+                        <div className="space-y-2">
+                          <Label htmlFor="calendar-url">URL del Calendario</Label>
+                          <Input
+                            id="calendar-url"
+                            type="text"
+                            placeholder="Pegue la URL de Google Calendar"
+                            value={newCalendarUrl}
+                            onChange={(e) => setNewCalendarUrl(e.target.value)}
+                          />
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Para obtener la URL, vaya a la configuración de su calendario de Google, 
+                            seleccione 'Integrar calendario' y copie la URL del iframe.
+                          </p>
+                        </div>
                         <Button 
-                          onClick={() => newCalendarUrl.trim() ? setGoogleCalendarUrl(newCalendarUrl) : alert("URL inválida")}
+                          onClick={() => handleGoogleCalendarUrl(newCalendarUrl)}
+                          className="w-full"
                         >
                           Añadir Calendar
                         </Button>

@@ -43,6 +43,7 @@ interface BoardState {
   darkMode: boolean;
   searchQuery: string;
   tagSearch: string;
+  googleCalendarUrl: string | null;
   
   // Dashboard management
   createDashboard: (name: string) => void;
@@ -96,6 +97,7 @@ export const useBoardStore = create<BoardState>()(
       darkMode: true,
       searchQuery: '',
       tagSearch: '',
+      googleCalendarUrl: localStorage.getItem('googleCalendarUrl'),
 
       createDashboard: (name) => {
         const id = generateId();
@@ -277,27 +279,15 @@ export const useBoardStore = create<BoardState>()(
           tagSearch: tags,
         })),
 
-      setGoogleCalendarUrl: (url: string) =>
-        set((state) => ({
-          boards: {
-            ...state.boards,
-            [state.selectedDashboard]: {
-              ...state.boards[state.selectedDashboard],
-              googleCalendarUrl: url,
-            },
-          },
-        })),
+      setGoogleCalendarUrl: (url: string) => {
+        localStorage.setItem('googleCalendarUrl', url);
+        set({ googleCalendarUrl: url });
+      },
 
-      removeGoogleCalendarUrl: () =>
-        set((state) => ({
-          boards: {
-            ...state.boards,
-            [state.selectedDashboard]: {
-              ...state.boards[state.selectedDashboard],
-              googleCalendarUrl: "",
-            },
-          },
-        })),
+      removeGoogleCalendarUrl: () => {
+        localStorage.removeItem('googleCalendarUrl');
+        set({ googleCalendarUrl: null });
+      },
 
       setWeatherLocation: (location: string) =>
         set((state) => ({
