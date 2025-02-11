@@ -1,0 +1,44 @@
+directories:
+  output: dist_electron
+  buildResources: iconoapp
+appId: com.procard.app
+productName: ProCard
+files:
+  - filter:
+      - dist/**/*
+      - electron/**/*
+      - iconoapp/**/*
+      - '!**/node_modules/**/*'
+linux:
+  target:
+    - deb
+  category: Office
+  maintainer: Lautaro Diez <lautaroagustindiez@gmail.com>
+  icon: iconoapp/icono_512x512.png
+  desktop:
+    Name: ProCard
+    Comment: una app de productividad
+    StartupWMClass: procard
+    Icon: icono
+  synopsis: Aplicación de productividad para la gestión de tareas
+  artifactName: ${productName}_${version}_${arch}.${ext}
+win:
+  target:
+    - nsis
+  icon: iconoapp/icono.ico
+  publisherName: Lautaro Diez
+  artifactName: ${productName}_${version}_${arch}.${ext}
+extraResources:
+  - from: iconoapp
+    to: resources/app-icons
+    filter:
+      - '**/*'
+extraFiles:
+  - from: iconoapp/icono_512x512.png
+    to: resources/app-icons/512x512/icono.png
+fileAssociations: []
+nodeGypRebuild: false
+npmRebuild: false
+asar: true
+publish: null
+electronVersion: 29.4.6

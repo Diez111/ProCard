@@ -8,8 +8,8 @@ import { Label } from './components/ui/label';
 import { ChevronDown, ChevronUp, ChevronRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './components/ui/dialog';
 import { Plus, Moon, Sun, Menu, X } from 'lucide-react';
-import { Weather } from './components/Weather';
 import DashboardBar from './components/DashboardBar';
+import { TimeProgress } from './components/TimeProgress';
 
 export default function App() {
   const selectedDashboard = useBoardStore((state) => state.selectedDashboard);
@@ -35,24 +35,8 @@ export default function App() {
     getFilteredTasks,
   } = useBoardStore();
 
-  React.useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkMode);
-  }, [darkMode]);
-
   const [isNewColumnOpen, setIsNewColumnOpen] = React.useState(false);
   const [newColumnTitle, setNewColumnTitle] = React.useState('');
-
-  const [weatherData, setWeatherData] = React.useState<{temp?: string, desc?: string, forecast?: any} | null>(null);
-  const [isLoadingWeather, setIsLoadingWeather] = React.useState(false);
-  const [weatherLocation, setWeatherLocation] = React.useState<string>("");
-
-  React.useEffect(() => {
-    const savedLocation = localStorage.getItem('weatherLocation');
-    if (savedLocation) {
-      setWeatherLocation(savedLocation);
-      fetchWeather(savedLocation);
-    }
-  }, []);
 
   const [newCalendarUrl, setNewCalendarUrl] = React.useState('');
   const [isWeatherSectionOpen, setIsWeatherSectionOpen] = React.useState(true);
@@ -60,34 +44,6 @@ export default function App() {
   const [isMobileSideOpen, setIsMobileSideOpen] = React.useState(false);
   const columnsContainerRef = React.useRef<HTMLDivElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-
-  const getDayName = (dateStr: string): string => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('es-ES', { weekday: 'long' });
-  };
-
-  const fetchWeather = async (location: string) => {
-    if (!location.trim()) {
-      alert('Por favor ingrese una ubicación');
-      return;
-    }
-    setIsLoadingWeather(true);
-    try {
-      const response = await fetch(`https://wttr.in/${encodeURIComponent(location.trim())}?format=j1&lang=es`);
-      const data = await response.json();
-      setWeatherData({
-        temp: data.current_condition[0].temp_C,
-        desc: data.current_condition[0].weatherDesc[0].value,
-        forecast: data.weather,
-      });
-      localStorage.setItem('weatherLocation', location);
-    } catch (error) {
-      console.error('Error fetching weather:', error);
-      alert('Error al obtener el clima. Por favor intente de nuevo.');
-    } finally {
-      setIsLoadingWeather(false);
-    }
-  };
 
   const handleExport = () => {
     const state = useBoardStore.getState();
@@ -165,32 +121,112 @@ export default function App() {
     }
 
     try {
-      // Validar y formatear la URL del calendario
-      let formattedUrl = url;
+      let calendarId = '';
       
-      // Si es una URL de calendario público
-      if (url.includes('calendar.google.com/calendar/u/0/embed')) {
-        formattedUrl = url;
-      } 
-      // Si es una URL de calendario compartido (formato antiguo)
-      else if (url.includes('calendar.google.com/calendar/embed')) {
-        formattedUrl = url;
-      }
-      // Si es una URL de ID de calendario
-      else if (url.match(/[\w-]+@group\.calendar\.google\.com/)) {
-        formattedUrl = `https://calendar.google.com/calendar/embed?src=${encodeURIComponent(url)}`;
-      }
-      // Si es una URL no válida
-      else {
-        throw new Error('Formato de URL no válido');
+      if (url.includes('calendar.google.com')) {
+        const srcMatch = url.match(/[?&]src=([^&]+)/);
+        if (srcMatch) {
+          calendarId = decodeURIComponent(srcMatch[1]);
+        } else {
+          const urlParts = url.split('/');
+          const idIndex = urlParts.findIndex(part => part.includes('@'));
+          if (idIndex !== -1) {
+            calendarId = urlParts[idIndex];
+          }
+        }
+      } else if (url.includes('@')) {
+        calendarId = url;
       }
 
+      if (!calendarId) {
+        throw new Error('No se pudo encontrar el ID del calendario');
+      }
+
+      // Parámetros actualizados para mejor soporte de tema oscuro
+      const calendarParams = new URLSearchParams({
+        src: calendarId,
+        mode: 'WEEK',
+        showPrint: '0',
+        showTabs: '0',
+        showCalendars: '0',
+        showTz: '0',
+        showTitle: '0',
+        showNav: '1',
+        showDate: '1',
+        hl: 'es',
+        wkst: '2',
+        ctz: 'local',
+        height: '600',
+        ...(darkMode ? {
+          // Parámetros específicos para modo oscuro
+          bgcolor: '%23202124',
+          color: '%23ffffff',
+          bcolor: '%23555555',
+          themeId: 'dark',
+        } : {
+          // Parámetros específicos para modo claro
+          bgcolor: '%23ffffff',
+          color: '%23000000',
+          bcolor: '%23cccccc',
+          themeId: 'light',
+        })
+      });
+
+      const formattedUrl = `https://calendar.google.com/calendar/embed?${calendarParams.toString()}`;
       setGoogleCalendarUrl(formattedUrl);
       setNewCalendarUrl('');
     } catch (error) {
-      alert("Por favor ingrese una URL válida de Google Calendar. Puede obtenerla desde la configuración de su calendario en 'Integrar calendario' > 'Insertar calendario'");
+      alert("Por favor ingrese una URL válida de Google Calendar. Asegúrese de que el calendario sea público y use la URL de 'Integrar calendario'.");
     }
   };
+
+  // Actualizar el efecto que maneja el tema
+  React.useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+    
+    if (googleCalendarUrl) {
+      try {
+        const currentUrl = new URL(googleCalendarUrl);
+        const params = new URLSearchParams(currentUrl.search);
+        const calendarId = params.get('src') || '';
+
+        // Usar los mismos parámetros que en handleGoogleCalendarUrl
+        const newParams = new URLSearchParams({
+          src: calendarId,
+          mode: 'WEEK',
+          showPrint: '0',
+          showTabs: '0',
+          showCalendars: '0',
+          showTz: '0',
+          showTitle: '0',
+          showNav: '1',
+          showDate: '1',
+          hl: 'es',
+          wkst: '2',
+          ctz: 'local',
+          height: '600',
+          ...(darkMode ? {
+            bgcolor: '%23202124',
+            color: '%23ffffff',
+            bcolor: '%23555555',
+            themeId: 'dark',
+          } : {
+            bgcolor: '%23ffffff',
+            color: '%23000000',
+            bcolor: '%23cccccc',
+            themeId: 'light',
+          })
+        });
+
+        const newUrl = `https://calendar.google.com/calendar/embed?${newParams.toString()}`;
+        if (newUrl !== googleCalendarUrl) {
+          setGoogleCalendarUrl(newUrl);
+        }
+      } catch (error) {
+        console.error('Error al actualizar el tema del calendario:', error);
+      }
+    }
+  }, [darkMode, googleCalendarUrl]);
 
   return (
     <div className="min-h-screen bg-gray-200 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
@@ -229,7 +265,9 @@ export default function App() {
       <main className="h-[calc(100vh-4rem)] overflow-hidden">
         <div className="flex flex-col md:flex-row h-full overflow-hidden">
           <div className="flex-1 p-4 overflow-hidden flex flex-col">
-            <div ref={columnsContainerRef} className="flex-1 overflow-x-auto overflow-y-hidden">
+            <div ref={columnsContainerRef} 
+              className="flex-1 overflow-x-auto overflow-y-hidden scrollbar-custom"
+            >
               <div className="flex gap-4 h-full min-w-fit pb-4">
                 {columns.map((column, index) => (
                   <div key={column.id} className="flex-shrink-0 w-[85vw] md:w-72">
@@ -266,25 +304,14 @@ export default function App() {
 
           {/* Sidebar */}
           <div className="hidden md:block w-full md:w-1/3 md:ml-4 mt-4 md:mt-0 h-screen">
-            <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg h-full flex flex-col space-y-6 overflow-y-auto">
+            <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg h-full flex flex-col space-y-6 overflow-y-auto scrollbar-custom">
               <div>
-                <h3 className="text-lg font-semibold mb-2">Clima</h3>
+                <h3 className="text-lg font-semibold mb-2">Progreso del Tiempo</h3>
                 <Button variant="ghost" size="icon" onClick={() => setIsWeatherSectionOpen(!isWeatherSectionOpen)}>
                   {isWeatherSectionOpen ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
                 </Button>
                 {isWeatherSectionOpen && (
-                  <Weather
-                    weatherLocation={weatherLocation}
-                    setWeatherLocation={setWeatherLocation}
-                    weatherData={weatherData}
-                    isLoadingWeather={isLoadingWeather}
-                    fetchWeather={fetchWeather}
-                    handleClearWeather={() => {
-                      setWeatherData(null);
-                      setWeatherLocation('');
-                    }}
-                    getDayName={getDayName}
-                  />
+                  <TimeProgress />
                 )}
               </div>
 
@@ -297,10 +324,10 @@ export default function App() {
                   <div className="flex flex-col gap-2">
                     {googleCalendarUrl ? (
                       <>
-                        <div className="h-[500px] relative">
+                        <div className="h-[500px] relative overflow-hidden rounded-lg">
                           <iframe
                             src={googleCalendarUrl}
-                            className="w-full h-full border-0 rounded-lg"
+                            className="w-full h-full border-0 rounded-lg scrollbar-custom"
                             frameBorder="0"
                             scrolling="no"
                             title="Google Calendar"
@@ -318,17 +345,17 @@ export default function App() {
                     ) : (
                       <div className="flex flex-col gap-2">
                         <div className="space-y-2">
-                          <Label htmlFor="calendar-url">URL del Calendario</Label>
+                          <Label htmlFor="calendar-url">ID del calendario o URL pública</Label>
                           <Input
                             id="calendar-url"
                             type="text"
-                            placeholder="Pegue la URL de Google Calendar"
+                            placeholder="ID del calendario o URL pública"
                             value={newCalendarUrl}
                             onChange={(e) => setNewCalendarUrl(e.target.value)}
                           />
                           <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Para obtener la URL, vaya a la configuración de su calendario de Google, 
-                            seleccione 'Integrar calendario' y copie la URL del iframe.
+                            Para añadir su calendario: 1) Haga público el calendario en la configuración 
+                            2) Copie el ID del calendario o la URL de 'Integrar calendario'
                           </p>
                         </div>
                         <Button 
@@ -352,26 +379,15 @@ export default function App() {
         <div className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-50">
           <div className="absolute right-0 top-0 h-full w-full max-w-md bg-gray-200 dark:bg-gray-950 p-4">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Clima y Calendario</h2>
+              <h2 className="text-lg font-semibold">Progreso y Calendario</h2>
               <Button variant="ghost" size="icon" onClick={() => setIsMobileSideOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
             <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg space-y-6">
               <div>
-                <h3 className="text-lg font-semibold mb-2">Clima</h3>
-                <Weather
-                  weatherLocation={weatherLocation}
-                  setWeatherLocation={setWeatherLocation}
-                  weatherData={weatherData}
-                  isLoadingWeather={isLoadingWeather}
-                  fetchWeather={fetchWeather}
-                  handleClearWeather={() => {
-                    setWeatherData(null);
-                    setWeatherLocation('');
-                  }}
-                  getDayName={getDayName}
-                />
+                <h3 className="text-lg font-semibold mb-2">Progreso del Tiempo</h3>
+                <TimeProgress />
               </div>
               <div>
                 <h3 className="text-lg font-semibold mb-2">Google Calendar</h3>
