@@ -50,7 +50,7 @@ Para instalar y ejecutar ProductividadApp en tu entorno local, sigue estos pasos
 
 1. **Clonar el Repositorio**
    ```bash
-   [git clone https://github.com/tu-usuario/productividadapp.git](https://github.com/Diez111/card.git)
+   [git clone https://github.com/diez/productividadapp.git](https://github.com/Diez111/card.git)
    cd card
    ```
 
