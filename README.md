@@ -4,6 +4,8 @@
 
 ProductividadApp es una aplicación de gestión de tareas y productividad inspirada en Trello, diseñada para ayudarte a organizar y priorizar tus actividades de manera eficiente. Esta aplicación está construida utilizando Vue.js y otras tecnologías web modernas, y se distribuye bajo la licencia **GNU General Public License v3.0**.
 
+https://github.com/user-attachments/assets/df827eba-8695-4183-9f4e-16988a8c92cd
+
 ## Características Principales
 
 ### 1. **Tablero de Tareas**
