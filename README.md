@@ -37,15 +37,6 @@ La aplicación permite importar y exportar tareas en formato JSON, facilitando l
 ### 7. **Modo Oscuro**
 La aplicación soporta un modo oscuro para mejorar la experiencia de usuario en entornos con poca luz, reduciendo la fatiga visual y mejorando la legibilidad.
 
-## Tecnologías Utilizadas
-
-- **Vue.js**: Framework de JavaScript para construir interfaces de usuario.
-- **HTML5**: Para la estructura de la página web.
-- **CSS3**: Para el diseño y estilo de la aplicación.
-- **JavaScript**: Para la lógica y funcionalidad de la aplicación.
-- **Google Calendar API**: Para la integración con Google Calendar.
-- **OpenWeatherMap API**: Para el widget de pronóstico del tiempo.
-
 ## Instalación
 
 Para instalar y ejecutar ProductividadApp en tu entorno local, sigue estos pasos:
