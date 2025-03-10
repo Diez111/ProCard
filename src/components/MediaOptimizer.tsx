@@ -31,7 +31,7 @@ export const MediaOrganizer: React.FC<MediaOrganizerProps> = ({
       /(?:youtu\.be|youtube\.com(?:\/embed|\/v|\/watch\?v=|\/watch\?.+&v=))([^/&?\n]+)/,
     );
     return videoId
-      ? `https://www.youtube.com/embed/${videoId[1]}?autoplay=0`
+      ? `https://www.youtube-nocookie.com/embed/${videoId[1]}?enablejsapi=1&origin=${window.location.origin}`
       : "";
   };
 
@@ -77,7 +77,8 @@ export const MediaOrganizer: React.FC<MediaOrganizerProps> = ({
 
   const handleUrlInput = (url: string) => {
     if (isYouTubeUrl(url)) {
-      onMediaChange(url); // Ahora pasamos la URL directamente sin procesar
+      const embedUrl = getYouTubeEmbedUrl(url);
+      onMediaChange(embedUrl);
     } else {
       setError("URL no válida. Ingresa un enlace de YouTube válido.");
     }
