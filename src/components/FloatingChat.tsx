@@ -1,5 +1,11 @@
-import React, { useState, useContext, createContext, useCallback } from "react";
-import { useBoardStore, Task, Column, BoardData } from "../store/board-store";
+import React, {
+  useState,
+  useContext,
+  createContext,
+  useCallback,
+  useEffect,
+} from "react";
+import { useBoardStore } from "../store/board-store";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Loader2 } from "lucide-react";
@@ -57,7 +63,6 @@ function generateBoardContext(): BoardContext {
   const currentBoard = boards[selectedDashboard];
   const dashboardName = dashboardNames[selectedDashboard];
 
-  // Procesar las columnas y sus tareas
   const columns = currentBoard.columns.map((column) => {
     const columnTasks = currentBoard.tasks
       .filter((task) => task.columnId === column.id)
@@ -81,7 +86,6 @@ function generateBoardContext(): BoardContext {
     };
   });
 
-  // Calcular estadísticas
   const totalTasks = currentBoard.tasks.length;
   const tasksPerColumn = columns.reduce(
     (acc, col) => {
@@ -124,12 +128,23 @@ export function FloatingChatProvider({
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const sendMessage = useCallback(
     async (message: string) => {
       setIsLoading(true);
 
-      // Generar nuevo mensaje del usuario
       const userMessage: ChatMessage = {
         id: crypto.randomUUID(),
         sender: "user",
@@ -140,14 +155,12 @@ export function FloatingChatProvider({
       setMessages((prev) => [...prev, userMessage]);
 
       try {
-        // Generar contexto actual del tablero
         const boardContext = generateBoardContext();
 
-        // Preparar el prompt con el contexto estructurado
         const prompt = {
           context: boardContext,
           userMessage: message,
-          previousMessages: messages.slice(-5), // Últimos 5 mensajes para contexto
+          previousMessages: messages.slice(-5),
         };
 
         const response = await fetch(
@@ -186,7 +199,6 @@ export function FloatingChatProvider({
 
         const data = await response.json();
 
-        // Crear mensaje de respuesta
         const aiMessage: ChatMessage = {
           id: crypto.randomUUID(),
           sender: "ai",
@@ -198,7 +210,6 @@ export function FloatingChatProvider({
       } catch (error) {
         console.error("Error al procesar mensaje:", error);
 
-        // Mensaje de error estructurado
         const errorMessage: ChatMessage = {
           id: crypto.randomUUID(),
           sender: "ai",
@@ -219,10 +230,14 @@ export function FloatingChatProvider({
       value={{ open, setOpen, messages, sendMessage, isLoading }}
     >
       {children}
-      <div className="fixed bottom-4 right-4 z-50">
+      <div
+        className={`fixed z-50 ${isMobile ? "inset-0" : "bottom-4 right-4"}`}
+      >
         {open ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-96 h-[32rem] flex flex-col border dark:border-gray-700">
-            {/* Header */}
+          <div
+            className={`bg-white dark:bg-gray-800 rounded-lg shadow-lg flex flex-col border dark:border-gray-700
+            ${isMobile ? "h-full w-full" : "w-96 h-[32rem]"}`}
+          >
             <div className="flex justify-between items-center p-4 border-b dark:border-gray-700">
               <h3 className="font-medium text-gray-800 dark:text-gray-200">
                 Asistente del Tablero
@@ -249,7 +264,6 @@ export function FloatingChatProvider({
               </Button>
             </div>
 
-            {/* Messages Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
               {messages.map((msg) => (
                 <div
@@ -285,7 +299,6 @@ export function FloatingChatProvider({
               )}
             </div>
 
-            {/* Input Area */}
             <form
               className="p-4 border-t dark:border-gray-700"
               onSubmit={(e) => {
@@ -316,7 +329,7 @@ export function FloatingChatProvider({
           <Button
             variant="outline"
             size="icon"
-            className="w-12 h-12 rounded-full shadow-lg"
+            className={`shadow-lg ${isMobile ? "fixed bottom-4 right-4 w-12 h-12" : "w-12 h-12"} rounded-full`}
             onClick={() => setOpen(true)}
           >
             <svg
