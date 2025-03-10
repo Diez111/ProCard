@@ -35,9 +35,13 @@ import ReactPlayer from "react-player";
 interface TaskCardProps {
   task: Task & {
     videoUrl?: string;
+    imageUrl?: string;
   };
   sourceColumnId: string;
-  onUpdate: (id: string, task: Partial<Task & { videoUrl?: string }>) => void;
+  onUpdate: (
+    id: string,
+    task: Partial<Task & { videoUrl?: string; imageUrl?: string }>,
+  ) => void;
   onDelete: (id: string) => void;
   onMoveTask: (
     taskId: string,
@@ -192,6 +196,7 @@ export function TaskCard({
                 controls={true}
                 playing={false}
                 light={true}
+                pip={true}
                 className="rounded-xl"
               />
             </div>
