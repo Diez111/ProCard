@@ -26,6 +26,7 @@ export type Task = {
   createdAt: number;
   date?: string;
   imageUrl?: string;
+  mediaUrl?: string; // Puede ser una imagen en base64 o una URL de YouTube embebida
   checklist: ChecklistItem[];
 };
 
@@ -218,6 +219,7 @@ export const useBoardStore = create<BoardState>()(
                   date: task.date ? task.date : undefined,
                   checklist: task.checklist || [],
                   imageUrl: task.imageUrl || "",
+                  mediaUrl: task.mediaUrl || "",
                 },
               ],
             },
