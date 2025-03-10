@@ -1,6 +1,5 @@
 import { app, BrowserWindow } from "electron";
 import path from "path";
-import "url";
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 function createWindow() {
   const mainWindow = new BrowserWindow({
@@ -8,7 +7,10 @@ function createWindow() {
     height: 800,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false
+      contextIsolation: false,
+      enableRemoteModule: false,
+      spellcheck: false,
+      autoFillEnabled: false
     }
   });
   if (process.env.NODE_ENV === "development") {
@@ -18,6 +20,7 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
   }
 }
+app.commandLine.appendSwitch("disable-features", "AutofillEnableApi");
 app.whenReady().then(createWindow);
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
