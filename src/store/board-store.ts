@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { generateId } from '../lib/utils';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { generateId } from "../lib/utils";
 
 export type Id = string;
 
@@ -13,7 +13,7 @@ export type ChecklistItem = {
   id: Id;
   text: string;
   completed: boolean;
-  type: 'item' | 'group';
+  type: "item" | "group";
   items?: ChecklistItem[];
 };
 
@@ -44,23 +44,36 @@ interface BoardState {
   searchQuery: string;
   tagSearch: string;
   googleCalendarUrl: string | null;
-  
+  chatMessages: {
+    id: string;
+    sender: "user" | "ai";
+    content: string;
+    timestamp: number;
+  }[];
+
   // Dashboard management
   createDashboard: (name: string) => void;
   selectDashboard: (id: string) => void;
   editDashboardName: (id: string, name: string) => void;
   deleteDashboard: (id: string) => void;
-  
+
   // Board operations
   addColumn: (title: string) => void;
   updateColumn: (id: Id, title: string) => void;
   deleteColumn: (id: Id) => void;
-  addTask: (columnId: Id, task: Omit<Task, 'id' | 'columnId' | 'createdAt'>) => void;
-  updateTask: (id: Id, updates: Partial<Omit<Task, 'id' | 'columnId'>>) => void;
+  addTask: (
+    columnId: Id,
+    task: Omit<Task, "id" | "columnId" | "createdAt">,
+  ) => void;
+  updateTask: (id: Id, updates: Partial<Omit<Task, "id" | "columnId">>) => void;
   deleteTask: (id: Id) => void;
   moveTask: (taskId: Id, toColumnId: Id) => void;
   reorderTasks: (activeId: Id, overId: Id) => void;
-  
+
+  // Chat operations
+  addChatMessage: (message: { sender: "user" | "ai"; content: string }) => void;
+  getChatContext: () => any;
+
   // UI state
   toggleDarkMode: () => void;
   setSearchQuery: (query: string) => void;
@@ -72,16 +85,16 @@ interface BoardState {
 }
 
 const DEFAULT_COLUMNS = [
-  { id: '1', title: 'Por hacer' },
-  { id: '2', title: 'En progreso' },
-  { id: '3', title: 'Completado' },
+  { id: "1", title: "Por hacer" },
+  { id: "2", title: "En progreso" },
+  { id: "3", title: "Completado" },
 ];
 
 const createEmptyBoardData = (): BoardData => ({
   columns: DEFAULT_COLUMNS,
   tasks: [],
-  googleCalendarUrl: '',
-  weatherLocation: '',
+  googleCalendarUrl: "",
+  weatherLocation: "",
 });
 
 export const useBoardStore = create<BoardState>()(
@@ -91,13 +104,14 @@ export const useBoardStore = create<BoardState>()(
         default: createEmptyBoardData(),
       },
       dashboardNames: {
-        default: 'Principal',
+        default: "Principal",
       },
-      selectedDashboard: 'default',
+      selectedDashboard: "default",
       darkMode: true,
-      searchQuery: '',
-      tagSearch: '',
-      googleCalendarUrl: localStorage.getItem('googleCalendarUrl'),
+      searchQuery: "",
+      tagSearch: "",
+      googleCalendarUrl: localStorage.getItem("googleCalendarUrl"),
+      chatMessages: [],
 
       createDashboard: (name) => {
         const id = generateId();
@@ -128,16 +142,19 @@ export const useBoardStore = create<BoardState>()(
       },
 
       deleteDashboard: (id) => {
-        if (id === 'default') return; // Prevent deleting default dashboard
-        
+        if (id === "default") return;
+
         set((state) => {
           const { [id]: deletedBoard, ...remainingBoards } = state.boards;
           const { [id]: deletedName, ...remainingNames } = state.dashboardNames;
-          
+
           return {
             boards: remainingBoards,
             dashboardNames: remainingNames,
-            selectedDashboard: state.selectedDashboard === id ? 'default' : state.selectedDashboard,
+            selectedDashboard:
+              state.selectedDashboard === id
+                ? "default"
+                : state.selectedDashboard,
           };
         });
       },
@@ -148,7 +165,10 @@ export const useBoardStore = create<BoardState>()(
             ...state.boards,
             [state.selectedDashboard]: {
               ...state.boards[state.selectedDashboard],
-              columns: [...state.boards[state.selectedDashboard].columns, { id: generateId(), title }],
+              columns: [
+                ...state.boards[state.selectedDashboard].columns,
+                { id: generateId(), title },
+              ],
             },
           },
         })),
@@ -159,8 +179,8 @@ export const useBoardStore = create<BoardState>()(
             ...state.boards,
             [state.selectedDashboard]: {
               ...state.boards[state.selectedDashboard],
-              columns: state.boards[state.selectedDashboard].columns.map((col) =>
-                col.id === id ? { ...col, title } : col
+              columns: state.boards[state.selectedDashboard].columns.map(
+                (col) => (col.id === id ? { ...col, title } : col),
               ),
             },
           },
@@ -172,8 +192,12 @@ export const useBoardStore = create<BoardState>()(
             ...state.boards,
             [state.selectedDashboard]: {
               ...state.boards[state.selectedDashboard],
-              columns: state.boards[state.selectedDashboard].columns.filter((col) => col.id !== id),
-              tasks: state.boards[state.selectedDashboard].tasks.filter((task) => task.columnId !== id),
+              columns: state.boards[state.selectedDashboard].columns.filter(
+                (col) => col.id !== id,
+              ),
+              tasks: state.boards[state.selectedDashboard].tasks.filter(
+                (task) => task.columnId !== id,
+              ),
             },
           },
         })),
@@ -193,7 +217,7 @@ export const useBoardStore = create<BoardState>()(
                   createdAt: Date.now(),
                   date: task.date ? task.date : undefined,
                   checklist: task.checklist || [],
-                  imageUrl: task.imageUrl || '',
+                  imageUrl: task.imageUrl || "",
                 },
               ],
             },
@@ -207,7 +231,7 @@ export const useBoardStore = create<BoardState>()(
             [state.selectedDashboard]: {
               ...state.boards[state.selectedDashboard],
               tasks: state.boards[state.selectedDashboard].tasks.map((task) =>
-                task.id === id ? { ...task, ...updates } : task
+                task.id === id ? { ...task, ...updates } : task,
               ),
             },
           },
@@ -219,7 +243,9 @@ export const useBoardStore = create<BoardState>()(
             ...state.boards,
             [state.selectedDashboard]: {
               ...state.boards[state.selectedDashboard],
-              tasks: state.boards[state.selectedDashboard].tasks.filter((task) => task.id !== id),
+              tasks: state.boards[state.selectedDashboard].tasks.filter(
+                (task) => task.id !== id,
+              ),
             },
           },
         })),
@@ -231,7 +257,7 @@ export const useBoardStore = create<BoardState>()(
             [state.selectedDashboard]: {
               ...state.boards[state.selectedDashboard],
               tasks: state.boards[state.selectedDashboard].tasks.map((task) =>
-                task.id === taskId ? { ...task, columnId: toColumnId } : task
+                task.id === taskId ? { ...task, columnId: toColumnId } : task,
               ),
             },
           },
@@ -243,7 +269,11 @@ export const useBoardStore = create<BoardState>()(
           const activeTask = tasks.find((t) => t.id === activeId);
           const overTask = tasks.find((t) => t.id === overId);
 
-          if (!activeTask || !overTask || activeTask.columnId !== overTask.columnId) {
+          if (
+            !activeTask ||
+            !overTask ||
+            activeTask.columnId !== overTask.columnId
+          ) {
             return state;
           }
 
@@ -264,6 +294,47 @@ export const useBoardStore = create<BoardState>()(
           };
         }),
 
+      addChatMessage: (message) =>
+        set((state) => ({
+          chatMessages: [
+            ...state.chatMessages,
+            {
+              id: crypto.randomUUID(),
+              ...message,
+              timestamp: Date.now(),
+            },
+          ],
+        })),
+
+      getChatContext: () => {
+        const state = get();
+        const currentBoard = state.boards[state.selectedDashboard];
+        const dashboardName = state.dashboardNames[state.selectedDashboard];
+
+        return {
+          dashboardName,
+          columns: currentBoard.columns.map((column) => ({
+            id: column.id,
+            title: column.title,
+            tasks: currentBoard.tasks
+              .filter((task) => task.columnId === column.id)
+              .map((task) => ({
+                id: task.id,
+                title: task.title,
+                description: task.description,
+                date: task.date,
+                labels: task.labels,
+                checklist: {
+                  total: task.checklist.length,
+                  completed: task.checklist.filter((item) => item.completed)
+                    .length,
+                },
+                createdAt: task.createdAt,
+              })),
+          })),
+        };
+      },
+
       toggleDarkMode: () =>
         set((state) => ({
           darkMode: !state.darkMode,
@@ -280,12 +351,12 @@ export const useBoardStore = create<BoardState>()(
         })),
 
       setGoogleCalendarUrl: (url: string) => {
-        localStorage.setItem('googleCalendarUrl', url);
+        localStorage.setItem("googleCalendarUrl", url);
         set({ googleCalendarUrl: url });
       },
 
       removeGoogleCalendarUrl: () => {
-        localStorage.removeItem('googleCalendarUrl');
+        localStorage.removeItem("googleCalendarUrl");
         set({ googleCalendarUrl: null });
       },
 
@@ -305,25 +376,29 @@ export const useBoardStore = create<BoardState>()(
         const searchLower = state.searchQuery.toLowerCase();
         const searchTags = state.tagSearch
           .toLowerCase()
-          .split(',')
+          .split(",")
           .map((tag) => tag.trim())
           .filter(Boolean);
 
         return state.boards[state.selectedDashboard].tasks
           .filter((task) => {
-            const matchesSearch = task.title.toLowerCase().includes(searchLower);
+            const matchesSearch = task.title
+              .toLowerCase()
+              .includes(searchLower);
             const matchesTags =
               searchTags.length === 0 ||
-              task.labels.some((label) => searchTags.includes(label.toLowerCase()));
+              task.labels.some((label) =>
+                searchTags.includes(label.toLowerCase()),
+              );
             return matchesSearch && matchesTags;
           })
           .sort((a, b) => b.createdAt - a.createdAt);
       },
     }),
     {
-      name: 'kanban-storage',
-    }
-  )
+      name: "kanban-storage",
+    },
+  ),
 );
 
 export const reorderTasks = useBoardStore.getState().reorderTasks;

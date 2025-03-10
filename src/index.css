@@ -3,241 +3,284 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 222.2 84% 4.9%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+        --muted: 210 40% 96.1%;
+        --muted-foreground: 215.4 16.3% 46.9%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222.2 84% 4.9%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 222.2 84% 4.9%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+        --border: 214.3 31.8% 91.4%;
+        --input: 214.3 31.8% 91.4%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+        --primary: 222.2 47.4% 11.2%;
+        --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+        --secondary: 210 40% 96.1%;
+        --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+        --accent: 210 40% 96.1%;
+        --accent-foreground: 222.2 47.4% 11.2%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
 
-    --ring: 215 20.2% 65.1%;
+        --ring: 215 20.2% 65.1%;
 
-    --radius: 0.5rem;
-  }
+        --radius: 0.5rem;
+    }
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    .dark {
+        --background: 222.2 84% 4.9%;
+        --foreground: 210 40% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+        --muted: 217.2 32.6% 17.5%;
+        --muted-foreground: 215 20.2% 65.1%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+        --popover: 222.2 84% 4.9%;
+        --popover-foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+        --card: 222.2 84% 4.9%;
+        --card-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+        --border: 217.2 32.6% 17.5%;
+        --input: 217.2 32.6% 17.5%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+        --primary: 210 40% 98%;
+        --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+        --secondary: 217.2 32.6% 17.5%;
+        --secondary-foreground: 210 40% 98%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+        --accent: 217.2 32.6% 17.5%;
+        --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 85.7% 97.3%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 0 85.7% 97.3%;
 
-    --ring: 217.2 32.6% 17.5%;
-  }
+        --ring: 217.2 32.6% 17.5%;
+    }
 }
 
 @layer components {
-  .scrollable {
-    overflow-y: auto;
-    max-height: 80vh;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
-  }
-
-  .custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: rgba(156, 163, 175, 0.5);
-    border-radius: 3px;
-  }
-
-  .dark .custom-scrollbar {
-    scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
-  }
-
-  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: rgba(75, 85, 99, 0.5);
-  }
-
-  .mobile-scroll-container {
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;  /* Firefox */
-    -ms-overflow-style: none;  /* IE and Edge */
-    touch-action: pan-x;
-    overscroll-behavior-x: contain;
-  }
-
-  .mobile-scroll-container::-webkit-scrollbar {
-    display: none;  /* Chrome, Safari, Opera */
-  }
-
-  /* Visible scroll track for mobile */
-  .mobile-scroll-track {
-    position: relative;
-    overscroll-behavior-x: contain;
-    touch-action: pan-x pinch-zoom;
-  }
-
-  .mobile-scroll-track::after {
-    content: '';
-    position: fixed;
-    bottom: 1.5rem;
-    left: 1rem;
-    right: 1rem;
-    height: 12px;
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 6px;
-    backdrop-filter: blur(8px);
-    pointer-events: none;
-  }
-
-  .dark .mobile-scroll-track::after {
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  /* Scroll indicator */
-  .scroll-indicator {
-    position: fixed;
-    bottom: 1.5rem;
-    left: 1rem;
-    width: 33.333333%;
-    height: 24px;
-    background: linear-gradient(90deg, #3b82f6, #60a5fa);
-    border-radius: 12px;
-    transition: all 0.3s ease;
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-    cursor: grab;
-    touch-action: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .dark .scroll-indicator {
-    background: linear-gradient(90deg, #60a5fa, #93c5fd);
-    box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
-  }
-
-  .scroll-indicator:active {
-    cursor: grabbing;
-    transform: scale(1.02);
-  }
-
-  /* Añadir animación de brillo */
-  @keyframes shine {
-    from {
-      background-position: 200% center;
+    .scrollable {
+        overflow-y: auto;
+        max-height: 80vh;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
     }
-    to {
-      background-position: -200% center;
-    }
-  }
 
-  .scroll-indicator::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.3),
-      transparent
-    );
-    background-size: 200% 100%;
-    animation: shine 3s linear infinite;
-  }
+    .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: rgba(156, 163, 175, 0.5);
+        border-radius: 3px;
+    }
+
+    .dark .custom-scrollbar {
+        scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
+    }
+
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: rgba(75, 85, 99, 0.5);
+    }
+
+    .mobile-scroll-container {
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+        touch-action: pan-x;
+        overscroll-behavior-x: contain;
+    }
+
+    .mobile-scroll-container::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+    }
+
+    /* Visible scroll track for mobile */
+    .mobile-scroll-track {
+        position: relative;
+        overscroll-behavior-x: contain;
+        touch-action: pan-x pinch-zoom;
+    }
+
+    .mobile-scroll-track::after {
+        content: "";
+        position: fixed;
+        bottom: 1.5rem;
+        left: 1rem;
+        right: 1rem;
+        height: 12px;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 6px;
+        backdrop-filter: blur(8px);
+        pointer-events: none;
+    }
+
+    .dark .mobile-scroll-track::after {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Scroll indicator */
+    .scroll-indicator {
+        position: fixed;
+        bottom: 1.5rem;
+        left: 1rem;
+        width: 33.333333%;
+        height: 24px;
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        cursor: grab;
+        touch-action: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .dark .scroll-indicator {
+        background: linear-gradient(90deg, #60a5fa, #93c5fd);
+        box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+    }
+
+    .scroll-indicator:active {
+        cursor: grabbing;
+        transform: scale(1.02);
+    }
+
+    /* Añadir animación de brillo */
+    @keyframes shine {
+        from {
+            background-position: 200% center;
+        }
+        to {
+            background-position: -200% center;
+        }
+    }
+
+    .scroll-indicator::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.3),
+            transparent
+        );
+        background-size: 200% 100%;
+        animation: shine 3s linear infinite;
+    }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
 }
 
 /* Estilos personalizados para scrollbar */
 @layer utilities {
-  .scrollbar-custom {
-    @apply overflow-auto;
-    scrollbar-width: thin;
-    scrollbar-color: #9ca3af transparent;
-  }
+    .scrollbar-custom {
+        @apply overflow-auto;
+        scrollbar-width: thin;
+        scrollbar-color: #9ca3af transparent;
+    }
 
-  .scrollbar-custom::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
+    .scrollbar-custom::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
 
-  .scrollbar-custom::-webkit-scrollbar-track {
-    background: transparent;
-  }
+    .scrollbar-custom::-webkit-scrollbar-track {
+        background: transparent;
+    }
 
-  .scrollbar-custom::-webkit-scrollbar-thumb {
-    @apply bg-gray-400 rounded-full;
-  }
+    .scrollbar-custom::-webkit-scrollbar-thumb {
+        @apply bg-gray-400 rounded-full;
+    }
 
-  .scrollbar-custom:hover::-webkit-scrollbar-thumb {
-    @apply bg-gray-500;
-  }
+    .scrollbar-custom:hover::-webkit-scrollbar-thumb {
+        @apply bg-gray-500;
+    }
 
-  .dark .scrollbar-custom {
-    scrollbar-color: #4b5563 transparent;
-  }
+    .dark .scrollbar-custom {
+        scrollbar-color: #4b5563 transparent;
+    }
 
-  .dark .scrollbar-custom::-webkit-scrollbar-thumb {
-    @apply bg-gray-600;
-  }
+    .dark .scrollbar-custom::-webkit-scrollbar-thumb {
+        @apply bg-gray-600;
+    }
 
-  .dark .scrollbar-custom:hover::-webkit-scrollbar-thumb {
-    @apply bg-gray-500;
-  }
+    .dark .scrollbar-custom:hover::-webkit-scrollbar-thumb {
+        @apply bg-gray-500;
+    }
+}
+
+.chat-bubble {
+    transition: all 0.3s ease;
+    transform-origin: bottom right;
+}
+
+.chat-bubble:hover {
+    transform: scale(1.05);
+}
+
+.chat-window {
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message-container {
+    scroll-behavior: smooth;
+}
+
+.message {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
