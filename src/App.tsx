@@ -95,7 +95,8 @@ export default function App() {
         } else {
           alert("Formato incorrecto de importación");
         }
-      } catch (err) {
+      } catch (error) {
+        console.error("Error al importar datos:", error);
         alert("Error al importar datos");
       }
     };
@@ -193,6 +194,7 @@ export default function App() {
       setGoogleCalendarUrl(formattedUrl);
       setNewCalendarUrl("");
     } catch (error) {
+      console.error("Error al procesar URL del calendario:", error);
       alert(
         "Por favor ingrese una URL válida de Google Calendar. Asegúrese de que el calendario sea público y use la URL de 'Integrar calendario'.",
       );

@@ -15,19 +15,24 @@ export const MediaOrganizer: React.FC<MediaOrganizerProps> = ({
   maxSizeMB = 1,
   maxWidthOrHeight = 1920,
 }) => {
-  const [isProcessing, setIsProcessing] = React.useState(false);
+  const [isProcessing, setIsProcessing] = React.useState<boolean>(false);
   const [error, setError] = React.useState<string | null>(null);
 
   const isYouTubeUrl = (url: string): boolean => {
-    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+    if (!url) return false;
+    const youtubeRegex =
+      /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/(?:watch\?v=)?([a-zA-Z0-9_-]{11})/;
     return youtubeRegex.test(url);
   };
 
   const getYouTubeEmbedUrl = (url: string): string => {
+    if (!url) return "";
     const videoId = url.match(
-      /(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/user\/\S+|\/ytscreeningroom\?v=|\/sandalsResorts#\w\/\w\/.*\/))([^\/&?\n]+)/,
+      /(?:youtu\.be|youtube\.com(?:\/embed|\/v|\/watch\?v=|\/watch\?.+&v=))([^/&?\n]+)/,
     );
-    return videoId ? `https://www.youtube.com/embed/${videoId[1]}` : "";
+    return videoId
+      ? `https://www.youtube.com/embed/${videoId[1]}?autoplay=0`
+      : "";
   };
 
   const handleFileChange = async (
@@ -63,7 +68,8 @@ export const MediaOrganizer: React.FC<MediaOrganizerProps> = ({
       };
 
       reader.readAsDataURL(compressedFile);
-    } catch (err) {
+    } catch (error) {
+      console.error("Error al comprimir imagen:", error);
       setError("Error al procesar la imagen. Intenta con otra.");
       setIsProcessing(false);
     }

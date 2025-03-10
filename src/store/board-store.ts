@@ -25,7 +25,6 @@ export type Task = {
   labels: string[];
   createdAt: number;
   date?: string;
-  imageUrl?: string;
   mediaUrl?: string; // Puede ser una imagen en base64 o una URL de YouTube embebida
   checklist: ChecklistItem[];
 };
@@ -70,10 +69,27 @@ interface BoardState {
   deleteTask: (id: Id) => void;
   moveTask: (taskId: Id, toColumnId: Id) => void;
   reorderTasks: (activeId: Id, overId: Id) => void;
-
   // Chat operations
   addChatMessage: (message: { sender: "user" | "ai"; content: string }) => void;
-  getChatContext: () => any;
+  getChatContext: () => {
+    dashboardName: string;
+    columns: {
+      id: string;
+      title: string;
+      tasks: {
+        id: string;
+        title: string;
+        description: string;
+        date?: string;
+        labels: string[];
+        checklist: {
+          total: number;
+          completed: number;
+        };
+        createdAt: number;
+      }[];
+    }[];
+  };
 
   // UI state
   toggleDarkMode: () => void;
@@ -147,7 +163,9 @@ export const useBoardStore = create<BoardState>()(
 
         set((state) => {
           const { [id]: deletedBoard, ...remainingBoards } = state.boards;
+          void deletedBoard;
           const { [id]: deletedName, ...remainingNames } = state.dashboardNames;
+          void deletedName;
 
           return {
             boards: remainingBoards,
@@ -218,7 +236,6 @@ export const useBoardStore = create<BoardState>()(
                   createdAt: Date.now(),
                   date: task.date ? task.date : undefined,
                   checklist: task.checklist || [],
-                  imageUrl: task.imageUrl || "",
                   mediaUrl: task.mediaUrl || "",
                 },
               ],

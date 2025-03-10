@@ -33,9 +33,11 @@ import { MediaOrganizer } from "./MediaOptimizer";
 import ReactPlayer from "react-player";
 
 interface TaskCardProps {
-  task: Task;
+  task: Task & {
+    videoUrl?: string;
+  };
   sourceColumnId: string;
-  onUpdate: (id: string, task: Partial<Task>) => void;
+  onUpdate: (id: string, task: Partial<Task & { videoUrl?: string }>) => void;
   onDelete: (id: string) => void;
   onMoveTask: (
     taskId: string,
@@ -408,7 +410,8 @@ export function TaskCard({
                       <MediaOrganizer
                         mediaUrl={editedImageUrl}
                         onMediaChange={setEditedImageUrl}
-                        type="image"
+                        maxSizeMB={2}
+                        maxWidthOrHeight={1920}
                       />
                     </div>
                     <div>
@@ -418,7 +421,8 @@ export function TaskCard({
                       <MediaOrganizer
                         mediaUrl={editedVideoUrl}
                         onMediaChange={setEditedVideoUrl}
-                        type="video"
+                        maxSizeMB={0}
+                        maxWidthOrHeight={0}
                       />
                     </div>
                   </div>
