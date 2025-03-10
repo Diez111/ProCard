@@ -77,8 +77,7 @@ export const MediaOrganizer: React.FC<MediaOrganizerProps> = ({
 
   const handleUrlInput = (url: string) => {
     if (isYouTubeUrl(url)) {
-      const embedUrl = getYouTubeEmbedUrl(url);
-      onMediaChange(embedUrl);
+      onMediaChange(url); // Ahora pasamos la URL directamente sin procesar
     } else {
       setError("URL no válida. Ingresa un enlace de YouTube válido.");
     }
