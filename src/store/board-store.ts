@@ -17,15 +17,28 @@ export type ChecklistItem = {
   items?: ChecklistItem[];
 };
 
+export type Label = {
+  name: string;
+  color: string;
+  usageCount: number;
+};
+
+export type LabelConfig = {
+  [labelName: string]: {
+    color: string;
+    pinned: boolean;
+  };
+};
+
 export type Task = {
   id: Id;
   columnId: Id;
   title: string;
   description: string;
-  labels: string[];
+  labels: Label[];
   createdAt: number;
   date?: string;
-  mediaUrl?: string; // Puede ser una imagen en base64 o una URL de YouTube embebida
+  imageUrl?: string;
   checklist: ChecklistItem[];
 };
 
@@ -34,6 +47,7 @@ export type BoardData = {
   tasks: Task[];
   googleCalendarUrl: string;
   weatherLocation: string;
+  labelConfig: LabelConfig;
 };
 
 interface BoardState {
@@ -69,6 +83,7 @@ interface BoardState {
   deleteTask: (id: Id) => void;
   moveTask: (taskId: Id, toColumnId: Id) => void;
   reorderTasks: (activeId: Id, overId: Id) => void;
+  
   // Chat operations
   addChatMessage: (message: { sender: "user" | "ai"; content: string }) => void;
   getChatContext: () => {
@@ -112,6 +127,7 @@ const createEmptyBoardData = (): BoardData => ({
   tasks: [],
   googleCalendarUrl: "",
   weatherLocation: "",
+  labelConfig: {},
 });
 
 export const useBoardStore = create<BoardState>()(
@@ -162,10 +178,10 @@ export const useBoardStore = create<BoardState>()(
         if (id === "default") return;
 
         set((state) => {
-          const { [id]: deletedBoard, ...remainingBoards } = state.boards;
-          void deletedBoard;
-          const { [id]: deletedName, ...remainingNames } = state.dashboardNames;
-          void deletedName;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { [id]: _unused1, ...remainingBoards } = state.boards;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { [id]: _unused2, ...remainingNames } = state.dashboardNames;
 
           return {
             boards: remainingBoards,
@@ -236,7 +252,7 @@ export const useBoardStore = create<BoardState>()(
                   createdAt: Date.now(),
                   date: task.date ? task.date : undefined,
                   checklist: task.checklist || [],
-                  mediaUrl: task.mediaUrl || "",
+                  imageUrl: task.imageUrl || "",
                 },
               ],
             },
@@ -342,7 +358,7 @@ export const useBoardStore = create<BoardState>()(
                 title: task.title,
                 description: task.description,
                 date: task.date,
-                labels: task.labels,
+                labels: task.labels.map(label => label.name),
                 checklist: {
                   total: task.checklist.length,
                   completed: task.checklist.filter((item) => item.completed)
@@ -364,10 +380,147 @@ export const useBoardStore = create<BoardState>()(
           searchQuery: query,
         })),
 
-      setTagSearch: (tags) =>
+      setTagSearch: (tags: string) =>
         set(() => ({
           tagSearch: tags,
         })),
+
+      // Label management
+      addLabel: (label: { name: string; color: string; usageCount: number }) =>
+        set((state) => {
+          const currentBoard = state.boards[state.selectedDashboard];
+          const existingLabel = currentBoard.labelConfig[label.name];
+          
+          return {
+            boards: {
+              ...state.boards,
+              [state.selectedDashboard]: {
+                ...currentBoard,
+                labelConfig: {
+                  ...currentBoard.labelConfig,
+                  [label.name]: {
+                    color: label.color,
+                    pinned: existingLabel?.pinned || false
+                  }
+                }
+              }
+            }
+          };
+        }),
+
+      pinLabel: (labelName: string) =>
+        set((state) => {
+          const currentBoard = state.boards[state.selectedDashboard];
+          const existingLabel = currentBoard.labelConfig[labelName];
+          
+          if (!existingLabel) return state;
+
+          return {
+            boards: {
+              ...state.boards,
+              [state.selectedDashboard]: {
+                ...currentBoard,
+                labelConfig: {
+                  ...currentBoard.labelConfig,
+                  [labelName]: {
+                    ...existingLabel,
+                    pinned: true
+                  }
+                }
+              }
+            }
+          };
+        }),
+
+      unpinLabel: (labelName: string) =>
+        set((state) => {
+          const currentBoard = state.boards[state.selectedDashboard];
+          const existingLabel = currentBoard.labelConfig[labelName];
+          
+          if (!existingLabel) return state;
+
+          return {
+            boards: {
+              ...state.boards,
+              [state.selectedDashboard]: {
+                ...currentBoard,
+                labelConfig: {
+                  ...currentBoard.labelConfig,
+                  [labelName]: {
+                    ...existingLabel,
+                    pinned: false
+                  }
+                }
+              }
+            }
+          };
+        }),
+
+      updateLabel: (labelName: string, updates: { color?: string; name?: string }) =>
+        set((state) => {
+          const currentBoard = state.boards[state.selectedDashboard];
+          const existingLabel = currentBoard.labelConfig[labelName];
+          
+          if (!existingLabel) return state;
+
+          // Handle label name change
+          if (updates.name && updates.name !== labelName) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { [labelName]: _unused3, ...remainingLabels } = currentBoard.labelConfig;
+            return {
+              boards: {
+                ...state.boards,
+                [state.selectedDashboard]: {
+                  ...currentBoard,
+                  labelConfig: {
+                    ...remainingLabels,
+                    [updates.name]: {
+                      ...existingLabel,
+                      color: updates.color || existingLabel.color
+                    }
+                  }
+                }
+              }
+            };
+          }
+
+          return {
+            boards: {
+              ...state.boards,
+              [state.selectedDashboard]: {
+                ...currentBoard,
+                labelConfig: {
+                  ...currentBoard.labelConfig,
+                  [labelName]: {
+                    ...existingLabel,
+                    color: updates.color || existingLabel.color
+                  }
+                }
+              }
+            }
+          };
+        }),
+
+      deleteLabel: (labelName: string) =>
+        set((state) => {
+          const currentBoard = state.boards[state.selectedDashboard];
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { [labelName]: _unused4, ...remainingLabels } = currentBoard.labelConfig;
+          
+          return {
+            boards: {
+              ...state.boards,
+              [state.selectedDashboard]: {
+                ...currentBoard,
+                labelConfig: remainingLabels,
+                tasks: currentBoard.tasks.map(task => ({
+                  ...task,
+                  labels: task.labels.filter(label => label.name !== labelName)
+                }))
+              }
+            }
+          };
+        }),
 
       setGoogleCalendarUrl: (url: string) => {
         localStorage.setItem("googleCalendarUrl", url);
@@ -407,7 +560,7 @@ export const useBoardStore = create<BoardState>()(
             const matchesTags =
               searchTags.length === 0 ||
               task.labels.some((label) =>
-                searchTags.includes(label.toLowerCase()),
+                searchTags.includes(label.name.toLowerCase()),
               );
             return matchesSearch && matchesTags;
           })

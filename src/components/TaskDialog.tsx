@@ -1,5 +1,5 @@
 import React from 'react';
-import { Task, Id } from '../store/board-store';
+import { Task } from '../store/board-store';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -7,6 +7,7 @@ import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 import { TaskChecklist } from './TaskChecklist';
 import { Image as ImageIcon, X } from 'lucide-react';
+import { TagSelector } from './TagSelector';
 
 interface TaskDialogProps {
   task?: Partial<Task>;
@@ -19,7 +20,7 @@ export function TaskDialog({ task, open, onClose, onSave }: TaskDialogProps) {
   const [title, setTitle] = React.useState(task?.title || '');
   const [description, setDescription] = React.useState(task?.description || '');
   const [date, setDate] = React.useState(task?.date || '');
-  const [labels, setLabels] = React.useState<string[]>(task?.labels || []);
+  const [labels, setLabels] = React.useState<string[]>(task?.labels?.map(l => typeof l === 'string' ? l : l.name) || []);
   const [checklist, setChecklist] = React.useState(task?.checklist || []);
   const [imageUrl, setImageUrl] = React.useState(task?.imageUrl || '');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -29,7 +30,7 @@ export function TaskDialog({ task, open, onClose, onSave }: TaskDialogProps) {
       setTitle(task?.title || '');
       setDescription(task?.description || '');
       setDate(task?.date || '');
-      setLabels(task?.labels || []);
+      setLabels(task?.labels?.map(l => typeof l === 'string' ? l : l.name) || []);
       setChecklist(task?.checklist || []);
       setImageUrl(task?.imageUrl || '');
     }
@@ -40,7 +41,7 @@ export function TaskDialog({ task, open, onClose, onSave }: TaskDialogProps) {
       title,
       description,
       date,
-      labels,
+      labels: labels.map(l => typeof l === 'string' ? l : l.name),
       checklist,
       imageUrl,
     });
@@ -108,10 +109,9 @@ export function TaskDialog({ task, open, onClose, onSave }: TaskDialogProps) {
 
               <div className="space-y-2">
                 <Label>Etiquetas</Label>
-                <Input
-                  value={labels.join(', ')}
-                  onChange={(e) => setLabels(e.target.value.split(',').map(l => l.trim()).filter(Boolean))}
-                  placeholder="Etiquetas separadas por comas"
+                <TagSelector
+                  selectedTags={labels}
+                  onTagChange={setLabels}
                 />
               </div>
 
