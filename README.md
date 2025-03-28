@@ -60,6 +60,12 @@ Para instalar y ejecutar ProductividadApp en tu entorno local, sigue estos pasos
 4. **Abrir en el Navegador**
    Abre tu navegador y navega a `http://localhost:8080` para ver la aplicación en funcionamiento.
 
+
+## Diagrama
+
+![diagram](https://github.com/user-attachments/assets/dc7b2711-0a4d-46c2-8eae-610101369620)
+
+
 ## Licencia
 
 Este proyecto está licenciado bajo la **GNU General Public License v3.0**. Consulta el archivo [LICENSE](LICENSE) para obtener más detalles.
