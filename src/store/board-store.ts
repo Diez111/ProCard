@@ -50,6 +50,8 @@ export type BoardData = {
   labelConfig: LabelConfig;
 };
 
+export type BoardMode = 'local' | 'online';
+
 interface BoardState {
   boards: Record<string, BoardData>;
   dashboardNames: Record<string, string>;
@@ -64,6 +66,8 @@ interface BoardState {
     content: string;
     timestamp: number;
   }[];
+  mode: BoardMode;
+  setMode: (mode: BoardMode) => void;
 
   // Dashboard management
   createDashboard: (name: string) => void;
@@ -83,7 +87,6 @@ interface BoardState {
   deleteTask: (id: Id) => void;
   moveTask: (taskId: Id, toColumnId: Id) => void;
   reorderTasks: (activeId: Id, overId: Id) => void;
-  
   // Chat operations
   addChatMessage: (message: { sender: "user" | "ai"; content: string }) => void;
   getChatContext: () => {
@@ -105,7 +108,6 @@ interface BoardState {
       }[];
     }[];
   };
-
   // UI state
   toggleDarkMode: () => void;
   setSearchQuery: (query: string) => void;
@@ -145,6 +147,8 @@ export const useBoardStore = create<BoardState>()(
       tagSearch: "",
       googleCalendarUrl: localStorage.getItem("googleCalendarUrl"),
       chatMessages: [],
+      mode: 'local',
+      setMode: (mode) => set({ mode }),
 
       createDashboard: (name) => {
         const id = generateId();
@@ -176,13 +180,11 @@ export const useBoardStore = create<BoardState>()(
 
       deleteDashboard: (id) => {
         if (id === "default") return;
-
         set((state) => {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { [id]: _unused1, ...remainingBoards } = state.boards;
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { [id]: _unused2, ...remainingNames } = state.dashboardNames;
-
           return {
             boards: remainingBoards,
             dashboardNames: remainingNames,
@@ -303,7 +305,6 @@ export const useBoardStore = create<BoardState>()(
           const tasks = [...state.boards[state.selectedDashboard].tasks];
           const activeTask = tasks.find((t) => t.id === activeId);
           const overTask = tasks.find((t) => t.id === overId);
-
           if (
             !activeTask ||
             !overTask ||
@@ -311,13 +312,10 @@ export const useBoardStore = create<BoardState>()(
           ) {
             return state;
           }
-
           const activeIndex = tasks.indexOf(activeTask);
           const overIndex = tasks.indexOf(overTask);
-
           tasks.splice(activeIndex, 1);
           tasks.splice(overIndex, 0, activeTask);
-
           return {
             boards: {
               ...state.boards,
@@ -345,7 +343,6 @@ export const useBoardStore = create<BoardState>()(
         const state = get();
         const currentBoard = state.boards[state.selectedDashboard];
         const dashboardName = state.dashboardNames[state.selectedDashboard];
-
         return {
           dashboardName,
           columns: currentBoard.columns.map((column) => ({
@@ -390,7 +387,6 @@ export const useBoardStore = create<BoardState>()(
         set((state) => {
           const currentBoard = state.boards[state.selectedDashboard];
           const existingLabel = currentBoard.labelConfig[label.name];
-          
           return {
             boards: {
               ...state.boards,
@@ -412,9 +408,7 @@ export const useBoardStore = create<BoardState>()(
         set((state) => {
           const currentBoard = state.boards[state.selectedDashboard];
           const existingLabel = currentBoard.labelConfig[labelName];
-          
           if (!existingLabel) return state;
-
           return {
             boards: {
               ...state.boards,
@@ -436,9 +430,7 @@ export const useBoardStore = create<BoardState>()(
         set((state) => {
           const currentBoard = state.boards[state.selectedDashboard];
           const existingLabel = currentBoard.labelConfig[labelName];
-          
           if (!existingLabel) return state;
-
           return {
             boards: {
               ...state.boards,
@@ -460,9 +452,7 @@ export const useBoardStore = create<BoardState>()(
         set((state) => {
           const currentBoard = state.boards[state.selectedDashboard];
           const existingLabel = currentBoard.labelConfig[labelName];
-          
           if (!existingLabel) return state;
-
           // Handle label name change
           if (updates.name && updates.name !== labelName) {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -483,7 +473,6 @@ export const useBoardStore = create<BoardState>()(
               }
             };
           }
-
           return {
             boards: {
               ...state.boards,
@@ -506,7 +495,6 @@ export const useBoardStore = create<BoardState>()(
           const currentBoard = state.boards[state.selectedDashboard];
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { [labelName]: _unused4, ...remainingLabels } = currentBoard.labelConfig;
-          
           return {
             boards: {
               ...state.boards,
@@ -551,7 +539,6 @@ export const useBoardStore = create<BoardState>()(
           .split(",")
           .map((tag) => tag.trim())
           .filter(Boolean);
-
         return state.boards[state.selectedDashboard].tasks
           .filter((task) => {
             const matchesSearch = task.title

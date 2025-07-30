@@ -68,7 +68,8 @@ export function TaskCard({
     .map((tag) => tag.trim())
     .filter(Boolean);
 
-  const getTagClassName = (label: string) => {
+  const getTagClassName = (label: string | undefined) => {
+    if (!label) return 'px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
     const isHighlighted = searchTags.includes(label.toLowerCase());
     return `px-2 py-0.5 text-xs rounded-full ${
       isHighlighted
@@ -104,8 +105,8 @@ export function TaskCard({
       date: editedDate,
       labels: editedLabels
         .split(",")
-        .map((label) => label.trim())
-        .filter(Boolean),
+        .map((label) => ({ name: label.trim(), color: "#3b82f6", usageCount: 0 }))
+        .filter((label) => label.name),
       imageUrl: editedImageUrl,
       videoUrl: editedVideoUrl,
       checklist: editedChecklist,
@@ -212,7 +213,7 @@ export function TaskCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-blue-100 dark:hover:bg-blue-900"
+                className="h-8 w-8 hover:bg-blue-100 dark:hover:bg-blue-900"
                 onClick={(e) => {
                   e.stopPropagation();
                   onMoveTask(task.id, sourceColumnId, "left");
@@ -225,7 +226,7 @@ export function TaskCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-blue-100 dark:hover:bg-blue-900"
+                className="h-8 w-8 hover:bg-blue-100 dark:hover:bg-blue-900"
                 onClick={(e) => {
                   e.stopPropagation();
                   onMoveTask(task.id, sourceColumnId, "right");
@@ -239,7 +240,7 @@ export function TaskCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-blue-100 dark:hover:bg-blue-900"
+                  className="h-8 w-8 hover:bg-blue-100 dark:hover:bg-blue-900"
                 >
                   <MoreHorizontal className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                 </Button>
@@ -319,12 +320,10 @@ export function TaskCard({
           {task.labels.map((label, index) => (
             <div
               key={index}
-              className={`flex items-center text-xs ${getTagClassName(
-                label,
-              )} px-3 py-1.5 rounded-full shadow-sm hover:shadow transition-shadow duration-200`}
+              className={`flex items-center text-xs ${getTagClassName(label?.name)} px-3 py-1.5 rounded-full shadow-sm hover:shadow transition-shadow duration-200`}
             >
               <Tag className="h-3 w-3 mr-1.5" />
-              {label}
+              {label?.name || ''}
             </div>
           ))}
         </div>

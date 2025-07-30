@@ -77,3 +77,30 @@ Las contribuciones son bienvenidas. Si encuentras algún problema o tienes una s
 ## Contacto
 
 Para cualquier pregunta o comentario, puedes contactarme a través de [mi correo electrónico](lautaroagustindiez@gmail.com).
+
+# Configuración de Supabase
+
+Para conectar este proyecto a tu propio servidor de Supabase (local u online), debes definir las siguientes variables de entorno:
+
+- `VITE_SUPABASE_URL`: La URL de tu proyecto Supabase
+- `VITE_SUPABASE_ANON_KEY`: La clave pública (anon) de tu proyecto Supabase
+
+Puedes definirlas en tu entorno o modificar los scripts en `package.json`.
+
+Ejemplo de ejecución:
+
+```
+VITE_SUPABASE_URL=https://tuproyecto.supabase.co VITE_SUPABASE_ANON_KEY=tu_clave_anon npm run dev
+```
+
+---
+
+# Sistema colaborativo y autenticación
+
+Se implementará un sistema de usuarios y autenticación con Supabase Auth. Cada acción relevante quedará registrada con el usuario y la fecha/hora, permitiendo trabajo colaborativo y logs de cambios.
+
+Próximos pasos:
+- Registro e inicio de sesión de usuarios
+- Guardado de tareas y cambios en Supabase
+- Opción de trabajo local o colaborativo
+- Log de modificaciones por usuario

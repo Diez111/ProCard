@@ -25,6 +25,8 @@ interface ColumnProps {
   onMoveTask: (taskId: string, sourceColumnId: string, direction: 'left' | 'right') => void;
   isFirstColumn: boolean;
   isLastColumn: boolean;
+  columnIndex: number;
+  totalColumns: number;
 }
 
 export function Column({
@@ -38,6 +40,8 @@ export function Column({
   onMoveTask,
   isFirstColumn,
   isLastColumn,
+  columnIndex,
+  totalColumns,
 }: ColumnProps) {
   const [isEditing, setIsEditing] = React.useState(false);
   const [title, setTitle] = React.useState(column.title);
@@ -101,8 +105,8 @@ export function Column({
               onDelete={onDeleteTask}
               sourceColumnId={column.id}
               onMoveTask={onMoveTask}
-              canMoveLeft={!isFirstColumn}
-              canMoveRight={!isLastColumn}
+              canMoveLeft={columnIndex > 0}
+              canMoveRight={columnIndex < totalColumns - 1}
             />
           ))}
         </div>
